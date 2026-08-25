@@ -2,7 +2,7 @@
 
 ![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
 
-XKS Gateway onboarding chart - creates the gateway namespace and GatewayConfig CR for non-OpenShift Kubernetes environments.
+XKS Gateway onboarding chart - installs the XKS GatewayConfig CRD, gateway namespace, and GatewayConfig CR for non-OpenShift Kubernetes.
 
 ## Maintainers
 
@@ -20,15 +20,17 @@ XKS Gateway onboarding chart - creates the gateway namespace and GatewayConfig C
 | gateway.cookie.refresh | string | `"1h"` | Access token refresh interval — must be less than the OIDC provider's Access Token Lifespan |
 | gateway.domain | required | `""` | External hostname (e.g., example.com or *.example.com) |
 | gateway.ingressMode | string | `"LoadBalancer"` | How the gateway is exposed externally on XKS (LoadBalancer only) |
-| gateway.namespace | string | `"rh-ai-gateway"` | Namespace created by this chart; default location for the OIDC client secret (create after install or use secretNamespace) |
+| gateway.namespace | string | `"rh-ai-gateway"` | Namespace created by this chart. Must be rh-ai-gateway; the operator hardcodes that name. |
 | gateway.networkPolicy.ingress.enabled | bool | `true` | Enable ingress NetworkPolicy for kube-auth-proxy |
 | gateway.oidc.clientID | required | `""` | OIDC client ID |
-| gateway.oidc.clientSecretRef | object | `{"key":"client-secret","name":""}` | Reference to a pre-existing Secret containing the OIDC client secret |
+| gateway.oidc.clientSecretRef | object | `{"key":"client-secret","name":""}` | Reference to the OIDC client secret (name required for BYO mode; optional when oidcClientSecret is set, defaults to oidc-client-secret) |
 | gateway.oidc.clientSecretRef.key | string | `"client-secret"` | Key within the Secret that holds the client secret value |
-| gateway.oidc.clientSecretRef.name | required | `""` | Name of the existing Kubernetes Secret |
+| gateway.oidc.clientSecretRef.name | string | `""` | Name of the Kubernetes Secret (existing or chart-created) |
 | gateway.oidc.issuerURL | required | `""` | OIDC provider URL (e.g., https://keycloak.example.com/realms/rhai) |
+| gateway.oidc.oidcClientSecret | string | `""` |  |
 | gateway.oidc.secretNamespace | string | `""` | Namespace where the client secret is located (defaults to gateway.namespace if empty) |
 | gateway.providerCASecretName | string | `""` | Name of Secret containing CA cert for the auth provider (must have ca.crt key, in gateway namespace) |
 | gateway.subdomain | string | `""` | Subdomain prefix for the gateway |
 | gateway.verifyProviderCertificate | bool | `true` | Verify auth provider TLS certificate (set to false only for development) |
+| installCRDs | bool | `true` | Install the XKS-tailored GatewayConfig CRD (required before the operator reconciles GatewayConfig) |
 

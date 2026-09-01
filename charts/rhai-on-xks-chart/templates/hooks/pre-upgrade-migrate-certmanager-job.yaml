@@ -68,6 +68,14 @@ rules:
       - list
       - patch
   - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - get
+      - list
+      - patch
+  - apiGroups:
       - operator.openshift.io
     resources:
       - certmanagers
@@ -147,5 +155,23 @@ spec:
             - /bin/bash
             - -c
             - |
+              adopt_crd() {
+                local crd_name="$1"
+                if ! kubectl get crd "$crd_name" &>/dev/null; then
+                  return
+                fi
+                OWNER=$(kubectl get crd "$crd_name" -o jsonpath='{.metadata.annotations.meta\.helm\.sh/release-name}' 2>/dev/null || true)
+                if [[ "$OWNER" == "${RELEASE_NAME}" ]]; then
+                  return
+                fi
+                echo "Adopting CRD ${crd_name} into Helm release '${RELEASE_NAME}'..."
+                kubectl label crd "$crd_name" app.kubernetes.io/managed-by=Helm --overwrite 2>&1
+                kubectl annotate crd "$crd_name" \
+                  meta.helm.sh/release-name="${RELEASE_NAME}" \
+                  meta.helm.sh/release-namespace="${RELEASE_NAMESPACE}" --overwrite 2>&1
+              }
+
+              adopt_crd "gatewayconfigs.services.platform.opendatahub.io"
+
               {{- tpl (.Files.Get "files/pre-upgrade-migrate-certmanager.sh") . | nindent 14 }}
 {{- end }}

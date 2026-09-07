@@ -122,7 +122,7 @@ test_3_external_certmanager() {
   # cert-manager-operator subchart resources must not be deployed
   assert_deployment_gone "cert-manager-operator"
 
-  # cert-manager workloads must still be running (
+  # cert-manager workloads must still be running
   wait_for_all_deployments_in_namespace "cert-manager"
 
   # RHAI operator must still be healthy because cert-manager is running externally
@@ -133,9 +133,37 @@ test_3_external_certmanager() {
   helm_deploy
 }
 
-# ─── Test 5: Uninstall lifecycle ────────────────────────────────────────────
+# ─── Test 4: xks-gateway configured ─────────────────────────────────────────
 
-test_5_uninstall_lifecycle() {
+test_4_xks_gateway_configured() {
+  local gateway_values="${SCRIPT_DIR}/../test/values-e2e-gateway.yaml"
+  if [[ ! -f "$gateway_values" ]]; then
+    fail "Gateway values file not found: $gateway_values"
+    return 1
+  fi
+
+  log "Deploying with configured xks-gateway (domain + OIDC secret)"
+  helm_deploy -f "$gateway_values"
+  wait_ke_ready
+
+  assert_gateway_configured_resources "e2e.example.com"
+  assert_operator_gateway_service_enabled
+}
+
+# ─── Test 5: xks-gateway disabled ───────────────────────────────────────────
+
+test_5_xks_gateway_disabled() {
+  log "Disabling xks-gateway subchart (controller off)"
+  helm_deploy --set "xks-gateway.enabled=false"
+  wait_ke_ready
+  wait_for_deployment "rhai-operator" "redhat-ods-operator"
+
+  assert_operator_gateway_service_disabled
+}
+
+# ─── Test 6: Uninstall lifecycle ────────────────────────────────────────────
+
+test_6_uninstall_lifecycle() {
   ensure_deployed
 
   # Phase A: uninstall without namespace cleanup (default)
@@ -187,8 +215,10 @@ ALL_TESTS=(
   "1:Install check:test_1_install_check"
   "2:sail+lws Managed→Unmanaged→Managed:test_2_sail_lws_managed_unmanaged"
   "3:external cert-manager (subchart disabled):test_3_external_certmanager"
+  "4:xks-gateway configured:test_4_xks_gateway_configured"
+  "5:xks-gateway disabled:test_5_xks_gateway_disabled"
   # TODO: this would not work correctly, since KServe is blocking the deletion.
-  # "5:Uninstall lifecycle (cleanup + cleanupNamespaces):test_5_uninstall_lifecycle"
+  # "6:Uninstall lifecycle (cleanup + cleanupNamespaces):test_6_uninstall_lifecycle"
 )
 
 check_prerequisites

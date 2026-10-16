@@ -42,7 +42,7 @@ jobs:
             fi
           done
           if [[ "$EVENT_ACTION" == "labeled" && ( "$LABEL_NAME" == "lgtm" || "$LABEL_NAME" == "run-xks-e2e" ) ]]; then
-            echo "External contributor — approved via '$LABEL_NAME' label for this commit"
+            echo "External contributor — tests authorized via '$LABEL_NAME' label for this commit"
             exit 0
           fi
           echo "::error::xKS e2e tests required. A trusted reviewer must add the 'lgtm' or 'run-xks-e2e' label after reviewing this commit."

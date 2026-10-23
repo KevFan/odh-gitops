@@ -260,8 +260,8 @@ chart-snapshots: yq helm ## Create snapshots for chart(s). Use CHART_NAME=<name>
 GRID_REPO ?= https://github.com/praxis-proxy/grid.git
 GRID_REF ?= 3359afdcddda926f3cdf986f5173f12b30b40aae
 .PHONY: update-ai-grid-charts
-update-ai-grid-charts: yq ## Vendor AI Grid charts from praxis-proxy/grid. Use GRID_REF=<tag|sha>, optional GRID_REPO=<url|path>
-	@YQ='$(subst ','"'"',$(YQ))' GRID_REPO='$(subst ','"'"',$(GRID_REPO))' ./scripts/update-ai-grid-charts.sh '$(subst ','"'"',$(GRID_REF))'
+update-ai-grid-charts: yq helm ## Vendor AI Grid charts from praxis-proxy/grid. Use GRID_REF=<tag|sha>, optional GRID_REPO=<url|path>
+	@YQ='$(subst ','"'"',$(YQ))' HELM="$(HELM)" GRID_REPO='$(subst ','"'"',$(GRID_REPO))' ./scripts/update-ai-grid-charts.sh '$(subst ','"'"',$(GRID_REF))'
 
 .PHONY: chart-test
 chart-test: yq helm ## Test chart(s) against snapshots. Use CHART_NAME=<name> for specific chart, omit for all
@@ -279,8 +279,8 @@ helm-docs: helm-docs-ensure ## Run helm-docs for all charts.
 
 
 .PHONY: helm-verify
-helm-verify: ## Verify helm chart installation and DSC components
-	NAMESPACE=opendatahub-gitops OPERATOR_TYPE=$(OPERATOR_TYPE) ./scripts/verify-helm-chart.sh
+helm-verify: helm ## Verify helm chart installation and DSC components
+	HELM="$(HELM)" NAMESPACE=opendatahub-gitops OPERATOR_TYPE=$(OPERATOR_TYPE) ./scripts/verify-helm-chart.sh
 
 # Extra arguments to pass to helm commands (e.g., --set olm.source=custom-catalog)
 HELM_EXTRA_ARGS ?=
